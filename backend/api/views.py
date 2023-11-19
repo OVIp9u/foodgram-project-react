@@ -2,12 +2,13 @@ from rest_framework import filters, mixins, status, viewsets
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
 from recipes.models import Ingredient, Recipe, Tag
-
+from users.models import User
+from djoser import views
 from .permissions import IsAdminIsAuthorOrReadOnly
 from .serializers import (IngredientSerializer, RecipeGetSerializer,
-                          RecipeChangeSerializer, IngredientRecipeGetSerializer,
+                          RecipePutPatchDeleteSerializer, IngredientRecipeGetSerializer,
                           TagSerializer)
-
+from .serializers import AuthorizedUserSerializer
 
 class TagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
@@ -37,4 +38,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     '''def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
             return RecipeGetSerializer
-        return RecipeChangeSerializer'''
+        return RecipePutPatchDeleteSerializer'''
+
+class CustomUserViewSet(views.UserViewSet):
+    queryset = User.objects.all()
+    serializer_class = AuthorizedUserSerializer
+    permission_classes = (IsAdminIsAuthorOrReadOnly,)

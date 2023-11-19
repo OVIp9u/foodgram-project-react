@@ -21,7 +21,9 @@ INSTALLED_APPS = [
 
     'api',
     'recipes',
-    'drf_extra_fields'
+    'users.apps.UsersConfig',
+    'drf_extra_fields',
+    'djoser',
 ]
 
 MIDDLEWARE = [
@@ -78,7 +80,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+AUTH_USER_MODEL = 'users.User'
 LANGUAGE_CODE = 'ru'
 
 TIME_ZONE = 'UTC'
@@ -91,3 +93,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+}

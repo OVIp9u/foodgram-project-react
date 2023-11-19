@@ -6,7 +6,7 @@ User = get_user_model()
 
 
 class Tag(models.Model):
-    """Модель тега рецепта."""
+    """Модель тега."""
     name = models.CharField(
         max_length=200,
         unique=True,
@@ -26,7 +26,7 @@ class Tag(models.Model):
         validators=[
             RegexValidator(
                 regex=r"^[-a-zA-Z0-9_]+$",
-                message="Содержит недопустимый символ",
+                message="Недопустимый символ",
             )
         ],
     )
@@ -63,12 +63,13 @@ class Recipe(models.Model):
         Tag,
         verbose_name='Теги',
         related_name='recipes',
+        
     )
     author = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
-        verbose_name='Автор',
+        #verbose_name='Автор',
         related_name='recipes',
+        on_delete=models.CASCADE,
         null=True
     )
     ingredients = models.ManyToManyField(
@@ -94,22 +95,22 @@ class Recipe(models.Model):
         return self.name
 
 class RecipeIngredient(models.Model):
-    """Модель Рецепт-Ингредиент."""
+    """Модель связи Рецепт-Ингредиент."""
     recipe = models.ForeignKey(
         Recipe,
-        verbose_name='Рецепт',
+        #verbose_name='Рецепт',
         related_name='ingredient_list',
         on_delete=models.CASCADE,
     )
     ingredient = models.ForeignKey(
         Ingredient,
-        verbose_name='Ингредиент',
+        #verbose_name='Ингредиент',
         on_delete=models.CASCADE,
     )
     quantity = models.IntegerField('Quantity',)
 
     class Meta:
-        verbose_name = 'RecipeIngredient'
+        #verbose_name = 'RecipeIngredient'
         constraints = [
             models.UniqueConstraint(
                 fields=['recipe', 'ingredient'],

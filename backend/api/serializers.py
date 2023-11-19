@@ -4,8 +4,9 @@ from django.db import models
 from drf_extra_fields.fields import Base64ImageField
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers, fields
-
+from djoser.serializers import UserSerializer
 from recipes.models import Ingredient, Recipe, Tag, RecipeIngredient
+from users.models import User, Subscribe
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -67,7 +68,7 @@ class IngredientRecipeGetSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = RecipeIngredient
 
-class RecipeChangeSerializer(serializers.ModelSerializer):
+class RecipePutPatchDeleteSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True)
     # author 
     ingredients = serializers.SerializerMethodField()
@@ -89,3 +90,21 @@ class RecipeShortSerializer(serializers.ModelSerializer):
             'image',
             'cooking_time'
         )
+
+
+class AuthorizedUserSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'id', 'email', 'username',
+            'first_name', 'last_name',
+            'is_subscribed'
+    )
+
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        return (user.is_authenticated
+                and bool(Subscribe.objects.filter(user=user, author=obj)))
+    # exists()
