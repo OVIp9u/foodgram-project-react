@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -22,6 +21,7 @@ INSTALLED_APPS = [
 
     'api',
     'recipes',
+    'drf_extra_fields'
 ]
 
 MIDDLEWARE = [
