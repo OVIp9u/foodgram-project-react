@@ -38,7 +38,7 @@ class Command(BaseCommand):
 
         records = []
         with open(
-            '../data/ingredients.csv', encoding='utf-8', newline=''
+            './data/ingredients.csv', encoding='utf-8', newline=''
         ) as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:

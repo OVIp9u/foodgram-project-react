@@ -117,3 +117,42 @@ class RecipeIngredient(models.Model):
                 name='unique_recipe_ingredient'
             )
         ]
+
+
+class UsersRecipe(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт',
+    )
+
+    class Meta:
+        abstract = True
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'recipe'),
+                name='%(app_label)s_%(class)s_unique'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user} :: {self.recipe}'
+
+
+class Favourite(UsersRecipe):
+    class Meta(UsersRecipe.Meta):
+        default_related_name = 'favorites'
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранное'
+
+
+class ShoppingCart(UsersRecipe):
+    class Meta(UsersRecipe.Meta):
+        default_related_name = 'shopping_cart'
+        verbose_name = 'Корзина'
+        verbose_name_plural = 'Корзина'
