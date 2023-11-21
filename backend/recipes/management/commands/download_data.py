@@ -4,10 +4,10 @@ from django.core.management.base import BaseCommand
 
 from recipes.models import Ingredient
 
-
 OBJECTS_LIST = {
     "Ингредиенты": Ingredient,
 }
+
 
 def clear_data(self):
     for key, value in OBJECTS_LIST.items():
@@ -19,6 +19,7 @@ def clear_data(self):
 
 class Command(BaseCommand):
     help = "Загружает CSV данные из файла data."
+    
     def add_arguments(self, parser):
         # Аргумент для удаления всех имеющихся в БД данных
         parser.add_argument(
@@ -29,7 +30,6 @@ class Command(BaseCommand):
             help='Удаляет существующие данные, записанные ранее',
         )
 
-    
     def handle(self, *args, **options):
         """Загрузка Ингредиентов."""
 
