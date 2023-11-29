@@ -5,15 +5,18 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from api.serializers import CustomUserSerializer, SubscribeSerializer
-
-from .models import Subscribe, User
+from api.pagination import CustomPaginator
+from .models import User, Subscribe
+from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
 
 
 class CustomUserViewSet(views.UserViewSet):
     """Вьюсет пользователя."""
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    pagination_class = CustomPaginator
+
 
     @action(
         methods=('post', 'delete'),
