@@ -22,11 +22,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
     
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
-        print(self.context)
         return (
             user.is_authenticated
-            and Subscribe.objects.filter(user=user, author=obj).exists()
-            #bool(Subscribe.objects.filter(user=user, author=obj))
+            and #Subscribe.objects.filter(user=user, author=obj).exists()
+            bool(Subscribe.objects.filter(user=user, author=obj))
         )
 
 class SubscribeSerializer(CustomUserSerializer):
@@ -49,7 +48,7 @@ class SubscribeSerializer(CustomUserSerializer):
             )
         if user == author:
             raise exceptions.ValidationError(
-                detail='Вы не можете подписаться на самого себя!',
+                detail='Вы не можете подписаться на себя!',
                 code=status.HTTP_400_BAD_REQUEST
             )
         return data
@@ -158,22 +157,32 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
     
        
+    def validate_image(self, value):
+        if not value:
+            raise exceptions.ValidationError(
+                {'image': 'Нужна фотография рецепта'}
+            )
+        return value
+
+    def validate_cooking_time(self, value):
+        if value < 1:
+            raise exceptions.ValidationError(
+                {'cooking_time': 'Время приготовления не может быть меньше 1 минуты!'}
+            )
+        return value
+
     def validate_tags(self, value):
-        if value is not None:
-            tags_list = []
-            for tag in value:
-                if tag in tags_list:
-                    raise exceptions.ValidationError({
-                        'tags': 'Такой тег уже есть!'
-                    })
-                tags_list.append(tag)
-            return value
-        raise exceptions.ValidationError({'tags': 'Нужно выбрать хотя бы один тег!'})
-
-
-
-
-
+        if len(value) < 1 or not value:
+            raise exceptions.ValidationError({'tags': 'Нужно выбрать хотя бы один тег!'})
+        tags_list = []
+        for tag in value:
+            if tag in tags_list:
+                raise exceptions.ValidationError({
+                    'tags': 'Такой тег уже есть!'
+                })
+            tags_list.append(tag)
+        return value
+   
     def validate_ingredients(self, value):
         if not value:
             raise exceptions.ValidationError({
@@ -181,7 +190,12 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             })
         ingredients_list = []
         for item in value:
-            ingredient = get_object_or_404(Ingredient, id=item['id'])
+            try:
+                ingredient = Ingredient.objects.get(id=item['id'])
+            except:
+                raise exceptions.ValidationError({
+                    'ingredients': 'Такого ингредиента нет в базе!'
+                })#get_object_or_404(Ingredient, id=item['id'])
             if ingredient in ingredients_list:
                 raise exceptions.ValidationError({
                     'ingredients': 'Ингридиенты не могут повторяться!'
@@ -192,7 +206,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 })
             ingredients_list.append(ingredient)
         return value
-    @transaction.atomic
+
+    #@transaction.atomic
     def create_ingredients_amounts(self, ingredients, recipe):
         RecipeIngredient.objects.bulk_create(
             [RecipeIngredient(
@@ -202,7 +217,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             ) for ingredient in ingredients]
         )
 
-    @transaction.atomic
+    #@transaction.atomic
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
@@ -212,7 +227,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                                         ingredients=ingredients)
         return recipe
 
-    @transaction.atomic
+    #@transaction.atomic
     def update(self, instance, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
