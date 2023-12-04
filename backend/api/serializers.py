@@ -83,7 +83,7 @@ class SubscribeSerializer(CustomUserSerializer):
         recipes = obj.recipes.all()
         if limit:
             recipes = recipes[:int(limit)]
-        serializer = RecipeBriefSerializer(recipes, many=True, read_only=True)
+        serializer = RecipeMinSerializer(recipes, many=True, read_only=True)
         return serializer.data
 
 
@@ -114,23 +114,18 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     ingredients = serializers.SerializerMethodField()
     image = Base64ImageField()
     author = CustomUserSerializer(read_only=True)
-    is_favorited = fields.SerializerMethodField(read_only=True) # read_only=True
-    is_in_shopping_cart = fields.SerializerMethodField(read_only=True) # read_only=True
+    is_favorited = fields.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = fields.SerializerMethodField(read_only=True)
 
     class Meta:
         fields = fields = (
-            'id',
-            'tags',
-            'author',
-            'ingredients',
-            'is_favorited',
+            'id', 'tags', 'author',
+            'ingredients', 'is_favorited',
             'is_in_shopping_cart',
-            'name',
-            'image',
-            'text',
+            'name', 'image', 'text',
             'cooking_time',
         )
-        read_only_fields = ('id', 'author',)
+        #read_only_fields = ('id', 'author',)
         model = Recipe
     
     def get_ingredients(self, obj):
@@ -284,7 +279,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return RecipeGetSerializer(instance, context=context).data
 
 
-class RecipeBriefSerializer(serializers.ModelSerializer):
+class RecipeMinSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
 
     class Meta:

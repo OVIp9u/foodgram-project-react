@@ -1,6 +1,6 @@
 from rest_framework import viewsets, permissions
 from .models import Tag, Ingredient, Recipe, Favorite, RecipeIngredient, ShoppingCart
-from api.serializers import TagSerializer, RecipeBriefSerializer, IngredientSerializer, RecipeGetSerializer, RecipeCreateSerializer
+from api.serializers import TagSerializer, RecipeMinSerializer, IngredientSerializer, RecipeGetSerializer, RecipeCreateSerializer
 from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import IngredientFilter, RecipeFilter
@@ -11,7 +11,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from datetime import datetime
-
+from rest_framework import exceptions
 from django.db.models import Sum
 
 
@@ -19,17 +19,17 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     """Вьюсет тега."""
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    #permission_classes = (IsAdminOrReadOnly,)
+
     pagination_class = None
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     """Вьюсет ингредиента."""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    #permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientFilter
     search_fields = ('name',)
+
     pagination_class = None
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -63,7 +63,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             match request.method:
                 case 'POST': return self.add_to(Favorite, request.user, pk)
                 case 'DELETE': return self.delete_from(Favorite, request.user, pk)
-        ################################################
         except:
             return Response(
                 {'errors': 'Ошибка добавления в избранное!!'},
@@ -88,11 +87,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def add_to(self, model, user, pk):
         if model.objects.filter(user=user, recipe__id=pk).exists():
-            return Response({'errors': 'Рецепт уже добавлен!'},
+            raise exceptions.ValidationError({'errors': 'Рецепт уже добавлен!'},
                             status=status.HTTP_400_BAD_REQUEST)
         recipe = get_object_or_404(Recipe, id=pk)
         model.objects.create(user=user, recipe=recipe)
-        serializer = RecipeBriefSerializer(recipe)
+        serializer = RecipeMinSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete_from(self, model, user, pk):

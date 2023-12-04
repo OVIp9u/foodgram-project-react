@@ -6,12 +6,12 @@ from django.core.validators import RegexValidator
 class User(AbstractUser):
     """Модель пользователя."""
     email = models.EmailField(
-        'Адрес электронной почты',
+        verbose_name = 'Адрес электронной почты',
         max_length=254,
         unique=True,
     )
     username = models.CharField(
-        'Уникальный юзернейм',
+        'Юзернейм',
         max_length=150,
         unique=True,
         validators=[RegexValidator(
@@ -19,16 +19,22 @@ class User(AbstractUser):
             message='Имя пользователя содержит недопустимый символ'
         )]
     )
-    #first_name = models.CharField('Имя', max_length=150)
-    #last_name = models.CharField('Фамилия', max_length=150)
+    first_name = models.CharField(
+        verbose_name = 'Имя', max_length=150,
+        null=False, blank=True
+    )
+    last_name = models.CharField(
+        verbose_name = 'Фамилия', max_length=150,
+        null=False, blank=True
+    )
     password = models.CharField(
-        'Пароль',
+        verbose_name = 'Пароль',
         max_length=150,
         null=True,
         blank=False,
     )
-    USERNAME_FIELD = 'email'
 
+    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = (
         'username',
         'first_name',
@@ -36,14 +42,21 @@ class User(AbstractUser):
     )
 
     class Meta:
-        ordering = ('id',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        ordering = ('id',)
 
     def __str__(self):
         return self.username
 
 class Subscribe(models.Model):
+    """Модель подписки."""
+    author = models.ForeignKey(
+        User,
+        verbose_name='Автор',
+        related_name='subscribing',
+        on_delete=models.CASCADE,
+    )
     user = models.ForeignKey(
         User,
         verbose_name='Подписчик',
@@ -51,15 +64,7 @@ class Subscribe(models.Model):
         on_delete=models.CASCADE,
     )
 
-    author = models.ForeignKey(
-        User,
-        verbose_name='Автор',
-        related_name='subscribing',
-        on_delete=models.CASCADE,
-    )
-
     class Meta:
-        ordering = ('-id',)
         constraints = (
             models.UniqueConstraint(
                 fields=('user', 'author'),
@@ -68,3 +73,7 @@ class Subscribe(models.Model):
         )
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        ordering = ('-id',)
+
+    def __str__(self):
+        return f'{self.user} подписан на {self.author}'

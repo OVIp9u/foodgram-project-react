@@ -8,24 +8,26 @@ class UserAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'email', 'username',
         'first_name', 'last_name',
+        'password',
     )
     search_fields = (
-        'email', 'username',
+        'id', 'email', 'username',
         'first_name', 'last_name',
         )
-    list_filter = ('id', 'email', 'username', 'first_name', 'last_name',)
+    list_filter = (
+        'id', 'email', 'username',
+        'first_name', 'last_name',
+    )
     empty_value_display = '-пусто-'
 
 
 admin.site.register(Subscribe)
 class SubscribeAdmin(admin.ModelAdmin):
-    list_display = [
-        'pk',
-        'user',
-        'author',
-    ]
+    list_display = (
+        'id', 'user','author',
+    )
 
-    search_fields = [
+    search_fields = (
         'user',
         'author',
-    ]
+    )
