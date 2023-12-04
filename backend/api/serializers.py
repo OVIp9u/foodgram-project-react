@@ -6,27 +6,48 @@ from rest_framework import fields, serializers, status
 from django.shortcuts import get_object_or_404
 from django.db import models, transaction
 from rest_framework import exceptions
+from djoser.serializers import UserSerializer
 
 
-class CustomUserSerializer(serializers.ModelSerializer):
+class CustomUserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField(read_only=True)
-
+    #first_name = serializers.SerializerMethodField()
+    
     class Meta:
         fields = (
             'id', 'email', 'username',
             'first_name', 'last_name',
             'is_subscribed',
-            
         )
+        read_only_fields = ('id',)
         model = User
     
+    '''def get_first_name(self, obj):
+        first_name = obj.first_name
+        print('obj', obj)
+        print('self', self)
+        return first_name'''
     def get_is_subscribed(self, obj):
+
         user = self.context.get('request').user
-        return (
-            user.is_authenticated
-            and #Subscribe.objects.filter(user=user, author=obj).exists()
-            bool(Subscribe.objects.filter(user=user, author=obj))
-        )
+        return (user.is_authenticated
+            and bool(Subscribe.objects.filter(user=user, author=obj)))
+
+    
+    def validate_first_name(self, obj):
+        print('first_name', obj)
+        if not obj or obj == None:
+            
+            raise exceptions.ValidationError(
+                detail='Отсутствует имя!',
+                code=status.HTTP_400_BAD_REQUEST
+            )
+        elif len(obj) > 150:
+            raise exceptions.ValidationError(
+                detail='Имя длиннее 150 символов!',
+                code=status.HTTP_400_BAD_REQUEST
+            )
+        return obj
 
 class SubscribeSerializer(CustomUserSerializer):
     recipes_count = serializers.SerializerMethodField()
@@ -124,21 +145,33 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     
 
     def get_is_favorited(self, obj):
-        request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
-            return False
-        return Favorite.objects.filter(
-            user=request.user, recipe=obj
-        ).exists()
-    
-    def get_is_in_shopping_cart(self, obj):
-        request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
-            return False
-        return ShoppingCart.objects.filter(
-            user=request.user, recipe=obj
-        ).exists()
+        try:
+            request = self.context.get('request')
+            if request is None or request.user.is_anonymous:
+                return False
+            return Favorite.objects.filter(
+                user=request.user, recipe=obj
+            ).exists()
+        except:
+            raise exceptions.ValidationError(
+                detail='Ошибка добавления в избранное',
+                code=status.HTTP_400_BAD_REQUEST
+            )
 
+
+    def get_is_in_shopping_cart(self, obj):
+        try:
+            request = self.context.get('request')
+            if request is None or request.user.is_anonymous:
+                return False
+            return ShoppingCart.objects.filter(
+                user=request.user, recipe=obj
+            ).exists()
+        except:
+            raise exceptions.ValidationError(
+                detail='Ошибка добавления в корзину',
+                code=status.HTTP_400_BAD_REQUEST
+            )
     
 
 
@@ -207,7 +240,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             ingredients_list.append(ingredient)
         return value
 
-    #@transaction.atomic
+    @transaction.atomic
     def create_ingredients_amounts(self, ingredients, recipe):
         RecipeIngredient.objects.bulk_create(
             [RecipeIngredient(
@@ -217,7 +250,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             ) for ingredient in ingredients]
         )
 
-    #@transaction.atomic
+    @transaction.atomic
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
@@ -227,19 +260,24 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                                         ingredients=ingredients)
         return recipe
 
-    #@transaction.atomic
+    @transaction.atomic
     def update(self, instance, validated_data):
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
-        instance = super().update(instance, validated_data)
-        instance.tags.clear()
-        instance.tags.set(tags)
-        instance.ingredients.clear()
-        self.create_ingredients_amounts(recipe=instance,
-                                        ingredients=ingredients)
-        instance.save()
-        return instance
-
+        try:
+            tags = validated_data.pop('tags')
+            ingredients = validated_data.pop('ingredients')
+            instance = super().update(instance, validated_data)
+            instance.tags.clear()
+            instance.tags.set(tags)
+            instance.ingredients.clear()
+            self.create_ingredients_amounts(recipe=instance,
+                                            ingredients=ingredients)
+            instance.save()
+            return instance
+        except:
+            raise exceptions.ValidationError(
+                detail='Отсутствуют обязательные поля!',
+                code=status.HTTP_400_BAD_REQUEST
+            )
     def to_representation(self, instance):
         request = self.context.get('request')
         context = {'request': request}

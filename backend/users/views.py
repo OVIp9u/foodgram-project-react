@@ -19,8 +19,8 @@ class CustomUserViewSet(views.UserViewSet):
 
 
     @action(
-        methods=('post', 'delete'),
         detail=True,
+        methods=('post', 'delete'),
         permission_classes=(permissions.IsAuthenticated,)
     )
     def subscribe(self, request, **kwargs):
@@ -37,17 +37,18 @@ class CustomUserViewSet(views.UserViewSet):
             serializer.is_valid(raise_exception=True)
             Subscribe.objects.create(user=user, author=author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
+
         subscription = get_object_or_404(
             Subscribe,
-            author=author,
             user=user,
+            author=author
         )
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(
-        permission_classes=(permissions.IsAuthenticated,),
-        detail=False
+        detail=False,
+        permission_classes=(permissions.IsAuthenticated,)
     )
     def subscriptions(self, request):
         user = request.user
@@ -55,7 +56,7 @@ class CustomUserViewSet(views.UserViewSet):
         pages = self.paginate_queryset(queryset)
         serializer = SubscribeSerializer(
             pages,
-            context={'request': request},
             many=True,
+            context={'request': request}
         )
         return self.get_paginated_response(serializer.data)

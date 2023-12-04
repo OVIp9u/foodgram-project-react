@@ -59,9 +59,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def favorite(self, request, pk):
-        if request.method == 'POST':
-            return self.add_to(Favorite, request.user, pk)
-        return self.delete_from(Favorite, request.user, pk)
+        try:
+            match request.method:
+                case 'POST': return self.add_to(Favorite, request.user, pk)
+                case 'DELETE': return self.delete_from(Favorite, request.user, pk)
+        ################################################
+        except:
+            return Response(
+                {'errors': 'Ошибка добавления в избранное!!'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     @action(
         detail=True,
@@ -69,9 +76,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def shopping_cart(self, request, pk):
-        if request.method == 'POST':
-            return self.add_to(ShoppingCart, request.user, pk)
-        return self.delete_from(ShoppingCart, request.user, pk)
+        try:
+            match request.method:
+                case 'POST': return self.add_to(ShoppingCart, request.user, pk)
+                case 'DELETE': return self.delete_from(ShoppingCart, request.user, pk)
+        except:
+            return Response(
+                {'errors': 'Ошибка добавления в корзину!!'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     def add_to(self, model, user, pk):
         if model.objects.filter(user=user, recipe__id=pk).exists():

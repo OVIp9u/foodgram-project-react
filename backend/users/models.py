@@ -19,8 +19,8 @@ class User(AbstractUser):
             message='Имя пользователя содержит недопустимый символ'
         )]
     )
-    first_name = models.CharField('Имя', max_length=150)
-    last_name = models.CharField('Фамилия', max_length=150)
+    #first_name = models.CharField('Имя', max_length=150)
+    #last_name = models.CharField('Фамилия', max_length=150)
     password = models.CharField(
         'Пароль',
         max_length=150,
@@ -44,28 +44,27 @@ class User(AbstractUser):
         return self.username
 
 class Subscribe(models.Model):
-    """Модель подписки"""
-    author = models.ForeignKey(
-        User,
-        verbose_name='Автор рецепта',
-        related_name='subscribing',
-        on_delete=models.CASCADE,
-    )
     user = models.ForeignKey(
         User,
         verbose_name='Подписчик',
-        related_name="subscriber",
+        related_name='subscriber',
         on_delete=models.CASCADE,
     )
+
+    author = models.ForeignKey(
+        User,
+        verbose_name='Автор',
+        related_name='subscribing',
+        on_delete=models.CASCADE,
+    )
+
     class Meta:
+        ordering = ('-id',)
         constraints = (
             models.UniqueConstraint(
                 fields=('user', 'author'),
-                name='unique_subscribe'
+                name='unique_subscription'
             ),
         )
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-
-    def __str__(self):
-        return f'{self.user.username} подписан на {self.author.username}'
