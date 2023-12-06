@@ -1,8 +1,10 @@
-from django.contrib.auth import get_user_model
-from django_filters.rest_framework import FilterSet, filters
+#######
 
+from django_filters.rest_framework import FilterSet, filters
 from recipes.models import Ingredient
-from .models import Tag, Recipe
+
+from .models import Recipe, Tag
+
 
 class IngredientFilter(FilterSet):
     name = filters.CharFilter(lookup_expr='startswith')
@@ -10,6 +12,7 @@ class IngredientFilter(FilterSet):
     class Meta:
         fields = ('name', )
         model = Ingredient
+
 
 class RecipeFilter(FilterSet):
     tags = filters.ModelMultipleChoiceFilter(

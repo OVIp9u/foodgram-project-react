@@ -1,13 +1,12 @@
+from api.pagination import CustomPaginator
+from api.serializers import CustomUserSerializer, SubscribeSerializer
 from django.shortcuts import get_object_or_404
 from djoser import views
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from api.serializers import CustomUserSerializer, SubscribeSerializer
-from api.pagination import CustomPaginator
-from .models import User, Subscribe
-from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
+from .models import Subscribe, User
 
 
 class CustomUserViewSet(views.UserViewSet):
@@ -28,9 +27,9 @@ class CustomUserViewSet(views.UserViewSet):
         page = self.paginate_queryset(subscriptions)
         if page is not None:
             serializer = SubscribeSerializer(
-            page,
-            context={'request': request},
-            many=True,
+                page,
+                context={'request': request},
+                many=True,
             )
             return self.get_paginated_response(serializer.data)
         serializer = SubscribeSerializer(subscriptions, many=True)

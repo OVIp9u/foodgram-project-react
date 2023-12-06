@@ -1,10 +1,11 @@
 from django.contrib import admin
 
-from .models import User, Subscribe
+from .models import Subscribe, User
 
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
+    """Отображение пользователей в админке."""
     list_display = (
         'id', 'email', 'username',
         'first_name', 'last_name',
@@ -21,13 +22,14 @@ class UserAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
-admin.site.register(Subscribe)
+@admin.register(Subscribe)
 class SubscribeAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 'user','author',
-    )
-
+    """Отображение подписок в админке."""
     search_fields = (
         'user',
         'author',
     )
+    list_display = (
+        'id', 'user', 'author',
+    )
+    empty_value_display = '-пусто-'

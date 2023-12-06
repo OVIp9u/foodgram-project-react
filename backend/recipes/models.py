@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
-from django.db import models
 from django.core import validators
+from django.db import models
 
 User = get_user_model()
 
@@ -35,15 +35,14 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     """Модель ингредиента."""
-    name =models.CharField(
+    name = models.CharField(
         verbose_name="Название ингредиента",
         max_length=200,
-        
     )
     measurement_unit = models.CharField(
         verbose_name="Единица измерения",
         max_length=200,
-        blank=False, null=True, 
+        blank=False, null=True,
     )
 
     class Meta:
@@ -52,6 +51,7 @@ class Ingredient(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class Recipe(models.Model):
     """Модель рецепта."""
@@ -96,6 +96,7 @@ class Recipe(models.Model):
     def __str__(self):
         return self.name
 
+
 class RecipeIngredient(models.Model):
     """Модель рецепт-количество ингредиентов."""
     recipe = models.ForeignKey(
@@ -117,13 +118,15 @@ class RecipeIngredient(models.Model):
     )
 
     class Meta:
-        verbose_name = 'RecipeIngredient'
+        verbose_name = 'Связь рецепт-ингредиент'
+        verbose_name_plural = 'Связь рецепт-ингредиент'
         constraints = [
             models.UniqueConstraint(
                 fields=['recipe', 'ingredient'],
                 name='unique_recipe_ingredient',
             )
         ]
+
     def __str__(self):
         return f'{self.recipe} {self.ingredient}'
 
@@ -140,6 +143,7 @@ class Favorite(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Рецепт',
     )
+
     class Meta:
         default_related_name = 'favorites'
         verbose_name = 'Избранное'
@@ -167,9 +171,12 @@ class ShoppingCart(models.Model):
 
 class RecipeTag(models.Model):
     """Связь рецептов и тегов."""
-
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Связь тег-рецепт'
+        verbose_name_plural = 'Связь тег-рецепт'
 
     def __str__(self):
         return f"{self.recipe} {self.tag}"

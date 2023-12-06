@@ -1,12 +1,12 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
+from django.db import models
 
 
 class User(AbstractUser):
     """Модель пользователя."""
     email = models.EmailField(
-        verbose_name = 'Адрес электронной почты',
+        verbose_name='Адрес электронной почты',
         max_length=254,
         unique=True,
     )
@@ -20,15 +20,15 @@ class User(AbstractUser):
         )]
     )
     first_name = models.CharField(
-        verbose_name = 'Имя', max_length=150,
+        verbose_name='Имя', max_length=150,
         null=False, blank=True
     )
     last_name = models.CharField(
-        verbose_name = 'Фамилия', max_length=150,
+        verbose_name='Фамилия', max_length=150,
         null=False, blank=True
     )
     password = models.CharField(
-        verbose_name = 'Пароль',
+        verbose_name='Пароль',
         max_length=150,
         null=True,
         blank=False,
@@ -48,6 +48,7 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
 
 class Subscribe(models.Model):
     """Модель подписки."""

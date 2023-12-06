@@ -1,7 +1,6 @@
 import csv
 
 from django.core.management.base import BaseCommand
-
 from recipes.models import Ingredient
 
 OBJECTS_LIST = {
@@ -19,7 +18,7 @@ def clear_data(self):
 
 class Command(BaseCommand):
     help = "Загружает CSV данные из файла data."
-    
+
     def add_arguments(self, parser):
         # Аргумент для удаления всех имеющихся в БД данных
         parser.add_argument(
