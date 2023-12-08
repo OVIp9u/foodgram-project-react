@@ -5,7 +5,8 @@ from djoser import views
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-
+from djoser import signals
+from rest_framework import exceptions
 from .models import Subscribe, User
 
 
@@ -13,8 +14,43 @@ class CustomUserViewSet(views.UserViewSet):
     """Вьюсет пользователя."""
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly,]
     pagination_class = CustomPaginator
+
+    def get_permissions(self):
+        if self.action in ['subscribe', 'subscriptions', 'me']:
+            return [permissions.IsAuthenticated(),]
+        return [permissions.AllowAny(),]
+
+
+    def create(self, request, *args, **kwargs):
+        if (
+            'first_name' not in request.data.keys()
+            or request.data['first_name'] is None
+        ):
+            raise exceptions.ValidationError(
+                detail='Отсутствует имя!',
+                code=status.HTTP_400_BAD_REQUEST
+            )
+        if (
+            'last_name' not in request.data.keys()
+            or request.data['last_name'] is None
+        ):
+            raise exceptions.ValidationError(
+                detail='Отсутствует фамилия!',
+                code=status.HTTP_400_BAD_REQUEST
+            )
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer, *args, **kwargs):
+        user = serializer.save(*args, **kwargs)
+        print('user!!!!!', user)
+        signals.user_registered.send(
+            sender=self.__class__, user=user, request=self.request
+        )
 
     @action(
         detail=False,
@@ -59,12 +95,13 @@ class CustomUserViewSet(views.UserViewSet):
                     serializer.data, status=status.HTTP_201_CREATED
                 )
             case 'DELETE':
-                subscription = get_object_or_404(
-                    Subscribe,
-                    user=user,
-                    author=author
-                )
-                subscription.delete()
-                return Response(
-                    status=status.HTTP_204_NO_CONTENT
-                )
+                try:
+                    subscription = Subscribe.objects.get(user=user, author=author)                
+                    subscription.delete()
+                    return Response(
+                        status=status.HTTP_204_NO_CONTENT
+                    )
+                except Exception:
+                    return Response(
+                        data='Ошибка удаления подписки', status=status.HTTP_400_BAD_REQUEST
+                    )

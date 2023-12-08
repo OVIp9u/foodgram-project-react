@@ -140,7 +140,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
             return Favorite.objects.filter(
                 user=request.user, recipe=obj
             ).exists()
-        except:
+        except exceptions.ValidationError:
             raise exceptions.ValidationError(
                 detail='Ошибка добавления в избранное',
                 code=status.HTTP_400_BAD_REQUEST

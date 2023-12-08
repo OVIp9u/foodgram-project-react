@@ -51,13 +51,30 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeGetSerializer
         return RecipeCreateSerializer
 
-    def perform_create(self, serializer):
-        user = self.request.user
-        serializer.save(author=user)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        author = self.request.user
+        serializer.save(author=author)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
-    def perform_update(self, serializer):
-        user = self.request.user
-        serializer.save(author=user)
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        author = request.user
+        serializer.save(author=author)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=True,
@@ -65,17 +82,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated,]
     )
     def favorite(self, request, pk):
-        try:
-            match request.method:
-                case 'POST': return self.add_to(Favorite, request.user, pk)
-                case 'DELETE': return self.delete_from(
-                    Favorite, request.user, pk
-                )
-        except:
-            return Response(
-                {'errors': 'Ошибка добавления в избранное!!'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        """Добавление/удаление из избранного."""
+        match request.method:
+            case 'POST':
+                return self.add_to(Favorite, request.user, pk)
+            case 'DELETE':
+                return self.delete_from(Favorite, request.user, pk)
+
 
     @action(
         detail=True,
@@ -83,27 +96,28 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated,]
     )
     def shopping_cart(self, request, pk):
-        try:
-            match request.method:
-                case 'POST': return self.add_to(
-                    ShoppingCart, request.user, pk
-                )
-                case 'DELETE': return self.delete_from(
-                    ShoppingCart, request.user, pk
-                )
-        except:
-            return Response(
-                        {'errors': 'Ошибка добавления в корзину!!'},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
+        """Добавление/удаление из корзины."""
+        match request.method:
+            case 'POST':
+                return self.add_to(ShoppingCart, request.user, pk)
+            case 'DELETE': 
+                return self.delete_from(ShoppingCart, request.user, pk)
 
-    def add_to(self, model, user, id):
-        if model.objects.filter(user=user, recipe__id=id).exists():
-            raise exceptions.ValidationError(
-                {'errors': 'Рецепт уже есть в базе!'},
+    def add_to(self, model, user, pk):
+        """Добавление в модель."""
+        try:
+            recipe = Recipe.objects.get(pk=pk)
+        except Exception:
+            return Response(
+                data='Рецепта нет в базе',
                 status=status.HTTP_400_BAD_REQUEST
             )
-        recipe = get_object_or_404(Recipe, id=id)
+        obj = model.objects.filter(user=user, recipe=recipe)
+        if obj.exists():
+            return Response(
+                data='Рецепт уже добавлен',
+                status=status.HTTP_400_BAD_REQUEST
+            )
         model.objects.create(user=user, recipe=recipe)
         serializer = RecipeMinSerializer(recipe)
         return Response(
@@ -111,20 +125,23 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
 
     def delete_from(self, model, user, pk):
-        obj = model.objects.filter(user=user, recipe__id=pk)
-        if obj.exists():
-            obj.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'errors': 'Рецепт уже удален из базы!'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        """Удаление из модели."""
+        recipe = get_object_or_404(Recipe, pk=pk)
+        obj = model.objects.filter(user=user, recipe=recipe)
+        if not obj.exists():
+            return Response(
+                data='Рецепт уже удален!',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        obj.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
         permission_classes=[permissions.IsAuthenticated,]
     )
     def download_shopping_cart(self, request):
+        """Скачивание файла с корзиной."""
         user = request.user
         if user.shopping_cart.exists():
             ingredients = RecipeIngredient.objects.filter(
@@ -141,8 +158,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     f'{ingredient["ingredient__measurement_unit"]}'
                 )
 
-            file = f'{user.username}_shopping_cart.txt'
             response = HttpResponse(shopping_cart, content_type='text/plain')
-            response['Content-Disposition'] = f'{file}'
+            response['Content-Disposition'] = f'{user.username}_shopping_cart.txt'
             return response
         return Response('Корзина пуста', status=status.HTTP_400_BAD_REQUEST)
