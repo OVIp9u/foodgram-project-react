@@ -1,6 +1,4 @@
-# Файл main.yml
-# Имя workflow
-name: Main Foodgram Workflow
+name: Main FG Workflow
 # Перечень событий-триггеров, при которых должен запускаться workflow
 on:
   # Событие push возникает,
@@ -24,4 +22,3 @@ jobs:
       # Выполняем команду tree в текущей директории
       - name: Print project tree
         run: tree .
- 
