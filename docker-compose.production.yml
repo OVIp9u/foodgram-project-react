@@ -16,8 +16,8 @@ services:
   backend:
     image: ovip9u/fg_backend
     env_file: .env
-    depends_on:
-      - db
+    #depends_on:
+    #  - db
     volumes:
       - static_volume:/backend_static
       - media:/app/media/
