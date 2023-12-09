@@ -72,6 +72,7 @@ DATABASES = {
     }
 }
 
+CSRF_TRUSTED_ORIGINS = os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', default='').split(' ')
 
 AUTH_PASSWORD_VALIDATORS = [
     {
