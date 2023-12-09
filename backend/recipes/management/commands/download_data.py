@@ -26,7 +26,7 @@ class Command(BaseCommand):
             action='store_true',
             dest='delete_existing',
             default=False,
-            help='Удаляет существующие данные, записанные ранее',
+            help='Удаляет предыдущие данные',
         )
 
     def handle(self, *args, **options):
