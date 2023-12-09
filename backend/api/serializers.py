@@ -1,5 +1,5 @@
-from djoser.serializers import UserSerializer
 from django.db import models
+from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
