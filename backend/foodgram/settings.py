@@ -72,7 +72,7 @@ DATABASES = {
     }
 }
 
-CSRF_TRUSTED_ORIGINS = os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', default='').split(' ')
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1', 'http://localhost', 'https://paait.ru']
 
 AUTH_PASSWORD_VALIDATORS = [
     {
