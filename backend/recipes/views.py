@@ -7,7 +7,7 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import exceptions, permissions, status, viewsets
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -64,12 +64,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial
+        )
         serializer.is_valid(raise_exception=True)
         author = request.user
         serializer.save(author=author)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -89,7 +90,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             case 'DELETE':
                 return self.delete_from(Favorite, request.user, pk)
 
-
     @action(
         detail=True,
         methods=('post', 'delete'),
@@ -100,7 +100,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         match request.method:
             case 'POST':
                 return self.add_to(ShoppingCart, request.user, pk)
-            case 'DELETE': 
+            case 'DELETE':
                 return self.delete_from(ShoppingCart, request.user, pk)
 
     def add_to(self, model, user, pk):
@@ -159,6 +159,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 )
 
             response = HttpResponse(shopping_cart, content_type='text/plain')
-            response['Content-Disposition'] = f'{user.username}_shopping_cart.txt'
+            response['Content-Disposition'] = (
+                f'{user.username}_shopping_cart.txt'
+            )
             return response
         return Response('Корзина пуста', status=status.HTTP_400_BAD_REQUEST)

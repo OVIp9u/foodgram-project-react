@@ -21,7 +21,6 @@ class CustomUserViewSet(views.UserViewSet):
             return [permissions.IsAuthenticated(),]
         return [permissions.AllowAny(),]
 
-
     def create(self, request, *args, **kwargs):
         if (
             'first_name' not in request.data.keys()
@@ -43,11 +42,12 @@ class CustomUserViewSet(views.UserViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
     def perform_create(self, serializer, *args, **kwargs):
         user = serializer.save(*args, **kwargs)
-        print('user!!!!!', user)
         signals.user_registered.send(
             sender=self.__class__, user=user, request=self.request
         )
@@ -57,6 +57,7 @@ class CustomUserViewSet(views.UserViewSet):
         permission_classes=[permissions.IsAuthenticated,]
     )
     def subscriptions(self, request):
+        """Подписка."""
         subscriptions = User.objects.filter(
             subscribing__user=request.user
         )
@@ -77,6 +78,7 @@ class CustomUserViewSet(views.UserViewSet):
         permission_classes=[permissions.IsAuthenticated,]
     )
     def subscribe(self, request, **kwargs):
+        """Добавление/удаление подписки."""
         user = request.user
         author = get_object_or_404(
             User, id=self.kwargs.get('id')
@@ -96,12 +98,15 @@ class CustomUserViewSet(views.UserViewSet):
                 )
             case 'DELETE':
                 try:
-                    subscription = Subscribe.objects.get(user=user, author=author)                
+                    subscription = Subscribe.objects.get(
+                        user=user, author=author
+                    )
                     subscription.delete()
                     return Response(
                         status=status.HTTP_204_NO_CONTENT
                     )
                 except Exception:
                     return Response(
-                        data='Ошибка удаления подписки', status=status.HTTP_400_BAD_REQUEST
+                        data='Ошибка удаления подписки',
+                        status=status.HTTP_400_BAD_REQUEST
                     )

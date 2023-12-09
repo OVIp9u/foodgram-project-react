@@ -140,7 +140,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
             return Favorite.objects.filter(
                 user=request.user, recipe=obj
             ).exists()
-        except exceptions.ValidationError:
+        except Exception:
             raise exceptions.ValidationError(
                 detail='Ошибка добавления в избранное',
                 code=status.HTTP_400_BAD_REQUEST
@@ -154,7 +154,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
             return ShoppingCart.objects.filter(
                 user=request.user, recipe=obj
             ).exists()
-        except:
+        except Exception:
             raise exceptions.ValidationError(
                 detail='Ошибка добавления в корзину',
                 code=status.HTTP_400_BAD_REQUEST
@@ -213,7 +213,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         for item in value:
             try:
                 ingredient = Ingredient.objects.get(id=item['id'])
-            except:
+            except Exception:
                 raise exceptions.ValidationError({
                     'ingredients': 'Такого ингредиента нет в базе!'
                 })
@@ -260,7 +260,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                                             ingredients=ingredients)
             instance.save()
             return instance
-        except:
+        except Exception:
             raise exceptions.ValidationError(
                 detail='Отсутствуют обязательные поля!',
                 code=status.HTTP_400_BAD_REQUEST
