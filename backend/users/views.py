@@ -83,7 +83,7 @@ class CustomUserViewSet(views.UserViewSet):
             User, id=self.kwargs.get('id')
         )
 
-        if request.method is 'POST':
+        if request.method == 'POST':
             serializer = SubscribeSerializer(
                 author,
                 data=request.data,

@@ -84,7 +84,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk):
         """Добавление/удаление из избранного."""
-        if request.method is 'POST':
+        if request.method == 'POST':
             return self.add_to(Favorite, request.user, pk)
         else:
             return self.delete_from(Favorite, request.user, pk)
@@ -96,7 +96,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def shopping_cart(self, request, pk):
         """Добавление/удаление из корзины."""
-        if request.method is 'POST':
+        if request.method == 'POST':
             return self.add_to(ShoppingCart, request.user, pk)
         else:
             return self.delete_from(ShoppingCart, request.user, pk)
