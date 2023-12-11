@@ -83,29 +83,28 @@ class CustomUserViewSet(views.UserViewSet):
             User, id=self.kwargs.get('id')
         )
 
-        match request.method:
-            case 'POST':
-                serializer = SubscribeSerializer(
-                    author,
-                    data=request.data,
-                    context={"request": request}
+        if request.method is 'POST':
+            serializer = SubscribeSerializer(
+                author,
+                data=request.data,
+                context={"request": request}
+            )
+            serializer.is_valid(raise_exception=True)
+            Subscribe.objects.create(user=user, author=author)
+            return Response(
+                serializer.data, status=status.HTTP_201_CREATED
+            )
+        else:
+            try:
+                subscription = Subscribe.objects.get(
+                    user=user, author=author
                 )
-                serializer.is_valid(raise_exception=True)
-                Subscribe.objects.create(user=user, author=author)
+                subscription.delete()
                 return Response(
-                    serializer.data, status=status.HTTP_201_CREATED
+                    status=status.HTTP_204_NO_CONTENT
                 )
-            case 'DELETE':
-                try:
-                    subscription = Subscribe.objects.get(
-                        user=user, author=author
-                    )
-                    subscription.delete()
-                    return Response(
-                        status=status.HTTP_204_NO_CONTENT
-                    )
-                except Exception:
-                    return Response(
-                        data='Ошибка удаления подписки',
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
+            except Exception:
+                return Response(
+                    data='Ошибка удаления подписки',
+                    status=status.HTTP_400_BAD_REQUEST
+                )

@@ -84,11 +84,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk):
         """Добавление/удаление из избранного."""
-        match request.method:
-            case 'POST':
-                return self.add_to(Favorite, request.user, pk)
-            case 'DELETE':
-                return self.delete_from(Favorite, request.user, pk)
+        if request.method is 'POST':
+            return self.add_to(Favorite, request.user, pk)
+        else:
+            return self.delete_from(Favorite, request.user, pk)
 
     @action(
         detail=True,
@@ -97,11 +96,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def shopping_cart(self, request, pk):
         """Добавление/удаление из корзины."""
-        match request.method:
-            case 'POST':
-                return self.add_to(ShoppingCart, request.user, pk)
-            case 'DELETE':
-                return self.delete_from(ShoppingCart, request.user, pk)
+        if request.method is 'POST':
+            return self.add_to(ShoppingCart, request.user, pk)
+        else:
+            return self.delete_from(ShoppingCart, request.user, pk)
 
     def add_to(self, model, user, pk):
         """Добавление в модель."""
