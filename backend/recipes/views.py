@@ -151,6 +151,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 'ingredient__measurement_unit'
             ).annotate(cart_amount=Sum('amount'))
             shopping_cart = ['Список покупок:']
+            
             for ingredient in ingredients:
                 shopping_cart.append(
                     f'{ingredient['ingredient__name']} '
