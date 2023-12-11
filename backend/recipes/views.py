@@ -39,7 +39,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет рецепта."""
     queryset = Recipe.objects.all()
     pagination_class = CustomPaginator
-    permission_classes = [IsAuthorOrReadOnly | IsAdminOrReadOnly,]
+    permission_classes = [IsAuthorOrReadOnly | IsAdminOrReadOnly]
     filter_backends = (DjangoFilterBackend,)
     search_fields = ("name",)
     filterset_class = RecipeFilter
@@ -80,7 +80,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=('post', 'delete'),
-        permission_classes=[permissions.IsAuthenticated,]
+        permission_classes=[permissions.IsAuthenticated]
     )
     def favorite(self, request, pk):
         """Добавление/удаление из избранного."""
@@ -92,7 +92,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=('post', 'delete'),
-        permission_classes=[permissions.IsAuthenticated,]
+        permission_classes=[permissions.IsAuthenticated]
     )
     def shopping_cart(self, request, pk):
         """Добавление/удаление из корзины."""
@@ -136,7 +136,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=False,
-        permission_classes=[permissions.IsAuthenticated,]
+        permission_classes=[permissions.IsAuthenticated]
     )
     def download_shopping_cart(self, request):
         """Скачивание файла с корзиной."""
