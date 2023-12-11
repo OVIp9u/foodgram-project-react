@@ -152,9 +152,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
             for ingredient in ingredients:
                 shopping_cart.append(
-                    f'{ingredient['ingredient__name']} '
-                    f'{ingredient['cart_amount']} '
-                    f'{ingredient['ingredient__measurement_unit']}\n'
+                    f'{ingredient["ingredient__name"]} '
+                    f'{ingredient["cart_amount"]} '
+                    f'{ingredient["ingredient__measurement_unit"]}\n'
                 )
 
             response = HttpResponse(shopping_cart, content_type='text/plain')

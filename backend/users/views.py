@@ -17,8 +17,8 @@ class CustomUserViewSet(views.UserViewSet):
 
     def get_permissions(self):
         if self.action in ['subscribe', 'subscriptions', 'me']:
-            return [permissions.IsAuthenticated(),]
-        return [permissions.AllowAny(),]
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
 
     def create(self, request, *args, **kwargs):
         if (
@@ -53,7 +53,7 @@ class CustomUserViewSet(views.UserViewSet):
 
     @action(
         detail=False,
-        permission_classes=[permissions.IsAuthenticated,]
+        permission_classes=[permissions.IsAuthenticated]
     )
     def subscriptions(self, request):
         """Подписка."""
@@ -74,7 +74,7 @@ class CustomUserViewSet(views.UserViewSet):
     @action(
         detail=True,
         methods=('post', 'delete'),
-        permission_classes=[permissions.IsAuthenticated,]
+        permission_classes=[permissions.IsAuthenticated]
     )
     def subscribe(self, request, **kwargs):
         """Добавление/удаление подписки."""
