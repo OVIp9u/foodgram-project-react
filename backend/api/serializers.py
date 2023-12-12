@@ -1,9 +1,10 @@
 from django.db import models
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
+from rest_framework import exceptions, fields, serializers, status
+
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
-from rest_framework import exceptions, fields, serializers, status
 from users.models import Subscribe, User
 
 
@@ -26,19 +27,6 @@ class CustomUserSerializer(UserSerializer):
             user.is_authenticated
             and Subscribe.objects.filter(user=user, author=obj).exists()
         )
-
-    def validate_first_name(self, obj):
-        if not obj or obj is None:
-            raise exceptions.ValidationError(
-                detail='Отсутствует имя!',
-                code=status.HTTP_400_BAD_REQUEST
-            )
-        elif len(obj) > 150:
-            raise exceptions.ValidationError(
-                detail='Имя длиннее 150 символов!',
-                code=status.HTTP_400_BAD_REQUEST
-            )
-        return obj
 
 
 class SubscribeSerializer(CustomUserSerializer):
@@ -135,7 +123,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         try:
             request = self.context.get('request')
-            if request is None or request.user.is_anonymous:
+            if request is None or not request.user.is_authenticated:
                 return False
             return Favorite.objects.filter(
                 user=request.user, recipe=obj
@@ -149,7 +137,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     def get_is_in_shopping_cart(self, obj):
         try:
             request = self.context.get('request')
-            if request is None or request.user.is_anonymous:
+            if request is None or not request.user.is_authenticated:
                 return False
             return ShoppingCart.objects.filter(
                 user=request.user, recipe=obj
@@ -184,9 +172,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_cooking_time(self, value):
-        if value < 1:
+        if value < 1 or value > 3000:
             raise exceptions.ValidationError(
-                {'cooking_time': 'Время приготовления не может быть меньше 1!'}
+                {'cooking_time': 'Неправильное время приготовления!'}
             )
         return value
 
@@ -204,29 +192,29 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             tags_list.append(tag)
         return value
 
-    def validate_ingredients(self, value):
-        if not value:
+    def validate_ingredients(self, ingredients):
+        if not ingredients:
             raise exceptions.ValidationError({
                 'ingredients': 'Нужен хотя бы один ингредиент!'
             })
         ingredients_list = []
-        for item in value:
+        for ingredient in ingredients:
             try:
-                ingredient = Ingredient.objects.get(id=item['id'])
+                current_ingredient = Ingredient.objects.get(id=ingredient['id'])
             except Exception:
                 raise exceptions.ValidationError({
                     'ingredients': 'Такого ингредиента нет в базе!'
                 })
-            if ingredient in ingredients_list:
+            if current_ingredient in ingredients_list:
                 raise exceptions.ValidationError({
                     'ingredients': 'Ингридиенты не могут повторяться!'
                 })
-            if int(item['amount']) < 1:
+            if int(ingredient['amount']) < 1:
                 raise exceptions.ValidationError({
                     'amount': 'Количество ингредиента не может быть меньше 1!'
                 })
-            ingredients_list.append(ingredient)
-        return value
+            ingredients_list.append(current_ingredient)
+        return ingredients
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
@@ -241,11 +229,11 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def create_ingredients_amounts(self, ingredients, recipe):
         RecipeIngredient.objects.bulk_create(
-            [RecipeIngredient(
+            RecipeIngredient(
                 ingredient=Ingredient.objects.get(id=ingredient['id']),
                 recipe=recipe,
                 amount=ingredient['amount']
-            ) for ingredient in ingredients]
+            ) for ingredient in ingredients
         )
 
     def update(self, instance, validated_data):

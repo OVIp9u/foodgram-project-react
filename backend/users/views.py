@@ -1,10 +1,11 @@
-from api.pagination import CustomPaginator
-from api.serializers import CustomUserSerializer, SubscribeSerializer
 from django.shortcuts import get_object_or_404
 from djoser import signals, views
 from rest_framework import exceptions, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+from api.pagination import CustomPaginator
+from api.serializers import CustomUserSerializer, SubscribeSerializer
 
 from .models import Subscribe, User
 
@@ -61,19 +62,16 @@ class CustomUserViewSet(views.UserViewSet):
             subscribing__user=request.user
         )
         page = self.paginate_queryset(subscriptions)
-        if page is not None:
-            serializer = SubscribeSerializer(
-                page,
-                context={'request': request},
-                many=True,
-            )
-            return self.get_paginated_response(serializer.data)
-        serializer = SubscribeSerializer(subscriptions, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = SubscribeSerializer(
+            page,
+            context={'request': request},
+            many=True,
+        )
+        return self.get_paginated_response(serializer.data)
 
     @action(
         detail=True,
-        methods=('post', 'delete'),
+        methods=['post', 'delete'],
         permission_classes=[permissions.IsAuthenticated]
     )
     def subscribe(self, request, **kwargs):
@@ -94,17 +92,21 @@ class CustomUserViewSet(views.UserViewSet):
             return Response(
                 serializer.data, status=status.HTTP_201_CREATED
             )
-        else:
+        elif request.method == 'DELETE':
+
+            user = request.user
+            author = get_object_or_404(
+                User, id=self.kwargs.get('id')
+            )
             try:
-                subscription = Subscribe.objects.get(
-                    user=user, author=author
-                )
-                subscription.delete()
-                return Response(
-                    status=status.HTTP_204_NO_CONTENT
-                )
-            except Exception:
-                return Response(
-                    data='Ошибка удаления подписки',
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                    Subscribe.objects.get(
+                        user=user, author=author
+                    ).delete()
+                    return Response(
+                        status=status.HTTP_204_NO_CONTENT
+                    )
+            except Subscribe.DoesNotExist:
+                    return Response(
+                        data='Ошибка удаления подписки',
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
