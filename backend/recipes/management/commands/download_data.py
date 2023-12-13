@@ -1,14 +1,18 @@
 import csv
+from pathlib import Path
 
 from django.core.management.base import BaseCommand
 
+from foodgram.settings import BASE_DIR
 from recipes.models import Ingredient
+
+PATH = Path(BASE_DIR, 'data', 'ingredients.csv')
 
 
 def clear_data(self):
     Ingredient.objects.all().delete()
     self.stdout.write(
-        self.style.WARNING(f'Существующие записи ингредиентов были удалены.')
+        self.style.WARNING('Существующие записи ингредиентов были удалены.')
     )
 
 
@@ -31,18 +35,15 @@ class Command(BaseCommand):
         if options["delete_existing"]:
             clear_data(self)
             return None
-        records = []
         with open(
-            './data/ingredients.csv', encoding='utf-8', newline=''
+            PATH, encoding='utf-8', newline=''
         ) as csvfile:
             reader = csv.reader(csvfile)
             for name, measurement_unit in reader:
                 Ingredient.objects.get_or_create(
                     name=name, measurement_unit=measurement_unit
                 )
-                '''records.append(record)
 
-        Ingredient.objects.bulk_create(records)'''
         self.stdout.write(
             self.style.SUCCESS('Записи ингредиентов сохранены')
         )

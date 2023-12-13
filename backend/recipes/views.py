@@ -40,7 +40,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет рецепта."""
     queryset = Recipe.objects.all()
     pagination_class = CustomPaginator
-    permission_classes = [IsAuthorOrReadOnly, permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [
+        IsAuthorOrReadOnly, permissions.IsAuthenticatedOrReadOnly
+    ]
     filter_backends = (DjangoFilterBackend,)
     search_fields = ("name",)
     filterset_class = RecipeFilter
@@ -68,7 +70,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def delete_favorite(self, request, pk):
         return self.delete_from(Favorite, request.user, pk)
 
-
     @action(
         detail=True,
         methods=['post'],
@@ -82,11 +83,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def delete_shopping_cart(self, request, pk):
         return self.delete_from(ShoppingCart, request.user, pk)
 
-
     def add_to(self, model, user, pk):
         """Добавление в модель."""
         try:
-            recipe = Recipe.objects.get(pk=pk)
+            recipe = get_object_or_404(Recipe, pk=pk)
         except Exception:
             return Response(
                 data='Рецепта нет в базе',
@@ -99,7 +99,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         model.objects.create(user=user, recipe=recipe)
+
         serializer = RecipeMinSerializer(recipe)
+
         return Response(
             serializer.data, status=status.HTTP_201_CREATED
         )

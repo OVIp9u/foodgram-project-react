@@ -2,6 +2,7 @@ from django.db import models
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import exceptions, fields, serializers, status
+from rest_framework.response import Response
 
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
@@ -25,7 +26,7 @@ class CustomUserSerializer(UserSerializer):
         user = self.context.get('request').user
         return (
             user.is_authenticated
-            and Subscribe.objects.filter(user=user, author=obj).exists()
+            and obj.subscribing.filter(user=user).exists()
         )
 
 
@@ -129,8 +130,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
                 user=request.user, recipe=obj
             ).exists()
         except Exception:
-            raise exceptions.ValidationError(
-                detail='Ошибка добавления в избранное',
+            return Response(
                 code=status.HTTP_400_BAD_REQUEST
             )
 
@@ -143,8 +143,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
                 user=request.user, recipe=obj
             ).exists()
         except Exception:
-            raise exceptions.ValidationError(
-                detail='Ошибка добавления в корзину',
+            return Response(
                 code=status.HTTP_400_BAD_REQUEST
             )
 
@@ -200,7 +199,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         ingredients_list = []
         for ingredient in ingredients:
             try:
-                current_ingredient = Ingredient.objects.get(id=ingredient['id'])
+                current_ingredient = Ingredient.objects.get(
+                    id=ingredient['id']
+                )
             except Exception:
                 raise exceptions.ValidationError({
                     'ingredients': 'Такого ингредиента нет в базе!'

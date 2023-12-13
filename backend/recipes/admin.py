@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Ingredient, Recipe, Tag
+from .models import Ingredient, Recipe, RecipeIngredient, Tag
 
 
 @admin.register(Tag)
@@ -27,6 +27,12 @@ class IngredientAdmin(admin.ModelAdmin):
     empty_value_display = ' пусто '
 
 
+class InlineRecipeIngredient(admin.StackedInline):
+    """Вывод ингредиентов на страницу рецепта."""
+    model = RecipeIngredient
+    extra = 0
+
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     """Отображение рецептов в админке."""
@@ -35,9 +41,17 @@ class RecipeAdmin(admin.ModelAdmin):
         'name',
         'text',
         'cooking_time',
+        'add_to_favorite'
     ]
     list_filter = [
         'name',
         'author'
     ]
     empty_value_display = ' пусто '
+    inlines = (InlineRecipeIngredient, )
+
+    @admin.display(
+        description='Количество добавлений в избранное'
+    )
+    def add_to_favorite(self, obj):
+        return obj.favorites.count()

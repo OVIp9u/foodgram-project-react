@@ -7,6 +7,7 @@ User = get_user_model()
 
 MAX_LENGHT = 200
 
+
 class Tag(models.Model):
     """Модель тега."""
     name = models.CharField(
@@ -71,7 +72,6 @@ class Recipe(models.Model):
         verbose_name='Автор',
         related_name='recipes',
         on_delete=models.CASCADE,
-        #null=True,
     )
     ingredients = models.ManyToManyField(
         Ingredient,
@@ -90,7 +90,6 @@ class Recipe(models.Model):
         verbose_name='Описание',
     )
     cooking_time = models.PositiveSmallIntegerField(
-        #blank=False, null=False,
         verbose_name='Время приготовления',
         validators=[
             validators.MinValueValidator(
@@ -149,7 +148,6 @@ class RecipeIngredient(models.Model):
         return f'{self.recipe} {self.ingredient}'
 
 
-
 class AbstractRecipeModel(models.Model):
     user = models.ForeignKey(
         User,
@@ -161,8 +159,10 @@ class AbstractRecipeModel(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Рецепт',
     )
+
     class Meta:
         abstract = True
+
 
 class Favorite(AbstractRecipeModel):
     """Модель избранного."""

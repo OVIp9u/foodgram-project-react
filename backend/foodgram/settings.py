@@ -5,9 +5,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', ' ')
 
-DEBUG = DEBUG = True # int(os.getenv('DEBUG', 0))
+DEBUG = DEBUG = True  # int(os.getenv('DEBUG', 0))
 
-ALLOWED_HOSTS = ['*'] # ['158.160.68.159', '127.0.0.1', 'localhost', 'paait.ru']
+ALLOWED_HOSTS = ['*']  # ['158.160.68.159', '127.0.0.1', 'localhost', 'paait.ru']
 
 INSTALLED_APPS = [
     'django.contrib.admin',

@@ -99,14 +99,14 @@ class CustomUserViewSet(views.UserViewSet):
                 User, id=self.kwargs.get('id')
             )
             try:
-                    Subscribe.objects.get(
-                        user=user, author=author
-                    ).delete()
-                    return Response(
-                        status=status.HTTP_204_NO_CONTENT
-                    )
+                Subscribe.objects.get(
+                    user=user, author=author
+                ).delete()
+                return Response(
+                    status=status.HTTP_204_NO_CONTENT
+                )
             except Subscribe.DoesNotExist:
-                    return Response(
-                        data='Ошибка удаления подписки',
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
+                return Response(
+                    data='Ошибка удаления подписки',
+                    status=status.HTTP_400_BAD_REQUEST
+                )
