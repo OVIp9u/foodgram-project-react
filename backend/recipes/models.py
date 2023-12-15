@@ -3,9 +3,9 @@ from django.contrib.auth import get_user_model
 from django.core import validators
 from django.db import models
 
-User = get_user_model()
+from api.constants import MAX_LENGHT
 
-MAX_LENGHT = 200
+User = get_user_model()
 
 
 class Tag(models.Model):
@@ -22,7 +22,8 @@ class Tag(models.Model):
     )
     slug = models.SlugField(
         verbose_name="Слаг",
-        max_length=MAX_LENGHT, unique=True,
+        max_length=MAX_LENGHT,
+        unique=True,
     )
 
     class Meta:

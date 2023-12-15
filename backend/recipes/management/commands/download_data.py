@@ -1,12 +1,9 @@
 import csv
-from pathlib import Path
 
 from django.core.management.base import BaseCommand
 
-from foodgram.settings import BASE_DIR
+from api.constants import PATH
 from recipes.models import Ingredient
-
-PATH = Path(BASE_DIR, 'data', 'ingredients.csv')
 
 
 def clear_data(self):

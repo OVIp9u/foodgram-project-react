@@ -1,11 +1,13 @@
 from django.db import models
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework import exceptions, fields, serializers, status
-from rest_framework.response import Response
+from rest_framework import exceptions, fields, serializers
 from rest_framework.validators import UniqueTogetherValidator
-from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
-                            ShoppingCart, Tag)
+
+from recipes.models import (
+    Favorite, Ingredient, Recipe,
+    RecipeIngredient, ShoppingCart, Tag
+)
 from users.models import Subscribe, User
 
 
@@ -53,6 +55,7 @@ class SubscribeSerializer(CustomUserSerializer):
         serializer = RecipeMinSerializer(recipes, many=True, read_only=True)
         return serializer.data
 
+
 class SubscribeUpdateSerializer(serializers.ModelSerializer):
     """Сериализатор создания/удаления подписки."""
 
@@ -79,6 +82,7 @@ class SubscribeUpdateSerializer(serializers.ModelSerializer):
         return SubscribeSerializer(
             instance.author, context=self.context
         ).data
+
 
 class TagSerializer(serializers.ModelSerializer):
     """Сериализатор тега"""
@@ -133,29 +137,23 @@ class RecipeGetSerializer(serializers.ModelSerializer):
         return ingredients
 
     def get_is_favorited(self, obj):
-        try:
-            request = self.context.get('request')
-            if request is None or not request.user.is_authenticated:
-                return False
-            return Favorite.objects.filter(
-                user=request.user, recipe=obj
-            ).exists()
-        except Exception:
-            return Response(
-                code=status.HTTP_400_BAD_REQUEST
+        request = self.context.get('request')
+        if request is not None:
+            return (
+                request.user.is_authenticated
+                and Favorite.objects.filter(
+                    user=request.user, recipe=obj
+                ).exists()
             )
 
     def get_is_in_shopping_cart(self, obj):
-        try:
-            request = self.context.get('request')
-            if request is None or not request.user.is_authenticated:
-                return False
-            return ShoppingCart.objects.filter(
-                user=request.user, recipe=obj
-            ).exists()
-        except Exception:
-            return Response(
-                code=status.HTTP_400_BAD_REQUEST
+        request = self.context.get('request')
+        if request is not None:
+            return (
+                request.user.is_authenticated
+                and ShoppingCart.objects.filter(
+                    user=request.user, recipe=obj
+                ).exists()
             )
 
 
@@ -193,9 +191,13 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_cooking_time(self, value):
-        if value < 1 or value > 3000:
+        if value > 32767:
             raise exceptions.ValidationError(
-                {'cooking_time': 'Неправильное время приготовления!'}
+                {'cooking_time': 'Время приготовления больше 32767!'}
+            )
+        if value < 1:
+            raise exceptions.ValidationError(
+                {'cooking_time': 'Время приготовления не может быть меньше 1!'}
             )
         return value
 
@@ -314,6 +316,7 @@ class AbstractSerializer(serializers.ModelSerializer):
         """Вывод данных сериализатором рецепта."""
         return RecipeMinSerializer(instance.recipe).data
 
+
 class FavoriteRecipeSerializer(AbstractSerializer):
     """Сериализатор добавления в избранное."""
 
@@ -323,6 +326,7 @@ class FavoriteRecipeSerializer(AbstractSerializer):
 
     def validate(self, data):
         return super().validate(data)
+
 
 class ShoppingCartSerializer(AbstractSerializer):
     """Сериализатор добавления в корзину."""
