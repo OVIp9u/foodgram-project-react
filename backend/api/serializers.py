@@ -163,6 +163,17 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = '__all__'
 
+    def validate(self, attrs):
+        if 'tags' not in attrs.keys():
+            raise exceptions.ValidationError(
+                {'tags': 'Отсутствует поле "Теги"!'},
+            )
+        if 'ingredients' not in attrs.keys():
+            raise exceptions.ValidationError(
+                {'tags': 'Отсутствует поле "Ингредиенты"!'},
+            )
+        return super().validate(attrs)
+
     def validate_image(self, value):
         if not value:
             raise exceptions.ValidationError(
@@ -238,22 +249,17 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         )
 
     def update(self, instance, validated_data):
-        try:
-            tags = validated_data.pop('tags')
-            ingredients = validated_data.pop('ingredients')
-            instance = super().update(instance, validated_data)
-            instance.tags.clear()
-            instance.tags.set(tags)
-            instance.ingredients.clear()
-            self.create_ingredients_amounts(recipe=instance,
-                                            ingredients=ingredients)
-            instance.save()
-            return instance
-        except Exception:
-            raise exceptions.ValidationError(
-                detail='Отсутствуют обязательные поля!',
-                code=status.HTTP_400_BAD_REQUEST
-            )
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        instance = super().update(instance, validated_data)
+        instance.tags.clear()
+        instance.tags.set(tags)
+        instance.ingredients.clear()
+        self.create_ingredients_amounts(
+            recipe=instance, ingredients=ingredients
+        )
+        instance.save()
+        return instance
 
     def to_representation(self, instance):
         request = self.context.get('request')
@@ -273,3 +279,45 @@ class RecipeMinSerializer(serializers.ModelSerializer):
             'image',
             'cooking_time'
         )
+
+
+
+
+class AbstractSerializer(serializers.ModelSerializer):
+    """Абстрактный сериализатор корзина/избранное."""
+
+    class Meta:
+        abstract = True
+
+    def validate(self, data):
+        """Валидация на повторное добавление."""
+        user = data.get('user')
+        recipe = data.get('recipe')
+        if self.Meta.model.objects.filter(
+            user=user, recipe=recipe
+        ).exists():
+            raise exceptions.ValidationError(
+                {'error': 'Этот рецепт уже добавлен.'}
+            )
+        return data
+
+    def to_representation(self, instance):
+        """Вывод данных сериализатором рецепта."""
+        return RecipeMinSerializer(instance.recipe).data
+
+class FavoriteRecipeSerializer(AbstractSerializer):
+    """Сериализатор добавления в избранное."""
+
+    class Meta:
+        model = Favorite
+        fields = ('user', 'recipe')
+
+    def validate(self, data):
+        return super().validate(data)
+
+class ShoppingCartSerializer(AbstractSerializer):
+    """Сериализатор добавления в корзину."""
+
+    class Meta:
+        model = ShoppingCart
+        fields = ('user', 'recipe')

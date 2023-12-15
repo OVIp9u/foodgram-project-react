@@ -9,17 +9,28 @@ class UserAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'email', 'username',
         'first_name', 'last_name',
-        'password',
+        'password', 'recipes',
+        'subscribers'
     )
     search_fields = (
-        'id', 'email', 'username',
-        'first_name', 'last_name',
+        'username', 'first_name', 'last_name',
     )
     list_filter = (
-        'id', 'email', 'username',
-        'first_name', 'last_name',
+        'email', 'username',
     )
     empty_value_display = '-пусто-'
+
+    @admin.display(
+        description='Количество рецептов'
+    )
+    def recipes(self, obj):
+        return obj.recipes.count()
+
+    @admin.display(
+        description='Количество подписчиков'
+    )
+    def subscribers(self, obj):
+        return obj.subscriber.count()
 
 
 @admin.register(Subscribe)

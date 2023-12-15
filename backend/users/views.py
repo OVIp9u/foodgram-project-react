@@ -17,7 +17,9 @@ class CustomUserViewSet(views.UserViewSet):
     pagination_class = CustomPaginator
 
     def get_permissions(self):
-        if self.action in ['subscribe', 'subscriptions', 'me']:
+        if self.action in [
+            'subscribe', 'subscriptions', 'me', 'delete_subscribe'
+        ]:
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
@@ -47,6 +49,7 @@ class CustomUserViewSet(views.UserViewSet):
         )
 
     def perform_create(self, serializer, *args, **kwargs):
+        serializer.is_valid()
         user = serializer.save(*args, **kwargs)
         signals.user_registered.send(
             sender=self.__class__, user=user, request=self.request
@@ -71,8 +74,8 @@ class CustomUserViewSet(views.UserViewSet):
 
     @action(
         detail=True,
-        methods=['post', 'delete'],
-        permission_classes=[permissions.IsAuthenticated]
+        methods=['post'],
+        permission_classes=[permissions.IsAuthenticated],
     )
     def subscribe(self, request, **kwargs):
         """Добавление/удаление подписки."""
@@ -88,25 +91,27 @@ class CustomUserViewSet(views.UserViewSet):
                 context={"request": request}
             )
             serializer.is_valid(raise_exception=True)
+            #serializer.save()
             Subscribe.objects.create(user=user, author=author)
             return Response(
                 serializer.data, status=status.HTTP_201_CREATED
             )
-        elif request.method == 'DELETE':
 
-            user = request.user
-            author = get_object_or_404(
-                User, id=self.kwargs.get('id')
+    @subscribe.mapping.delete
+    def delete_subscribe(self, request, **kwargs):
+        user = request.user
+        author = get_object_or_404(
+            User, pk=self.kwargs.get('id')
+        )
+        try:
+            Subscribe.objects.get(
+                user=user, author=author
+            ).delete()
+            return Response(
+                status=status.HTTP_204_NO_CONTENT
             )
-            try:
-                Subscribe.objects.get(
-                    user=user, author=author
-                ).delete()
-                return Response(
-                    status=status.HTTP_204_NO_CONTENT
-                )
-            except Subscribe.DoesNotExist:
-                return Response(
-                    data='Ошибка удаления подписки',
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        except Subscribe.DoesNotExist:
+            return Response(
+                'Подписки не существует',
+                status=status.HTTP_400_BAD_REQUEST
+            )

@@ -64,6 +64,10 @@ class Subscribe(models.Model):
                 fields=('user', 'author'),
                 name='unique_subscription'
             ),
+            models.CheckConstraint(
+                check=models.Q(_negated=True, author=models.F('user')),
+                name='self_follow',
+            ),
         )
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
