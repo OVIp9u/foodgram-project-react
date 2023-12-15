@@ -29,3 +29,4 @@ urllib3==2.1.0
 django-cors-headers==3.13.0
 psycopg2-binary
 django-colorfield==0.11.0
+setuptools==69.0.2
