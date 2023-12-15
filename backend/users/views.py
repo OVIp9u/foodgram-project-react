@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from api.pagination import CustomPaginator
-from api.serializers import CustomUserSerializer, SubscribeSerializer
+from api.serializers import SubscribeUpdateSerializer, CustomUserSerializer, SubscribeSerializer
 
 from .models import Subscribe, User
 
@@ -17,36 +17,10 @@ class CustomUserViewSet(views.UserViewSet):
     pagination_class = CustomPaginator
 
     def get_permissions(self):
-        if self.action in [
-            'subscribe', 'subscriptions', 'me', 'delete_subscribe'
-        ]:
+        if self.action == 'me':
             return [permissions.IsAuthenticated()]
-        return [permissions.AllowAny()]
+        return super().get_permissions()
 
-    def create(self, request, *args, **kwargs):
-        if (
-            'first_name' not in request.data.keys()
-            or request.data['first_name'] is None
-        ):
-            raise exceptions.ValidationError(
-                detail='Отсутствует имя!',
-                code=status.HTTP_400_BAD_REQUEST
-            )
-        if (
-            'last_name' not in request.data.keys()
-            or request.data['last_name'] is None
-        ):
-            raise exceptions.ValidationError(
-                detail='Отсутствует фамилия!',
-                code=status.HTTP_400_BAD_REQUEST
-            )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
 
     def perform_create(self, serializer, *args, **kwargs):
         serializer.is_valid()
@@ -77,41 +51,38 @@ class CustomUserViewSet(views.UserViewSet):
         methods=['post'],
         permission_classes=[permissions.IsAuthenticated],
     )
-    def subscribe(self, request, **kwargs):
+    def subscribe(self, request, id):
         """Добавление/удаление подписки."""
-        user = request.user
-        author = get_object_or_404(
-            User, id=self.kwargs.get('id')
-        )
+        get_object_or_404(User, id=id)
+        data = {
+            'author':id,
+            'user':request.user.id
+        }
 
-        if request.method == 'POST':
-            serializer = SubscribeSerializer(
-                author,
-                data=request.data,
+        serializer = SubscribeUpdateSerializer(
+
+                data=data,
                 context={"request": request}
             )
-            serializer.is_valid(raise_exception=True)
-            #serializer.save()
-            Subscribe.objects.create(user=user, author=author)
-            return Response(
-                serializer.data, status=status.HTTP_201_CREATED
-            )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED
+        )
 
     @subscribe.mapping.delete
-    def delete_subscribe(self, request, **kwargs):
+    def delete_subscribe(self, request, id):
+        get_object_or_404(User, id=id)
         user = request.user
-        author = get_object_or_404(
-            User, pk=self.kwargs.get('id')
+        obj = Subscribe.objects.filter(
+            user=user, author=id
         )
-        try:
-            Subscribe.objects.get(
-                user=user, author=author
-            ).delete()
+        if obj.exists():
+            obj.delete()
             return Response(
                 status=status.HTTP_204_NO_CONTENT
             )
-        except Subscribe.DoesNotExist:
-            return Response(
-                'Подписки не существует',
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        return Response(
+            'Подписки не существует',
+            status=status.HTTP_400_BAD_REQUEST
+        )

@@ -26,7 +26,12 @@ class User(AbstractUser):
         verbose_name='Пароль',
         max_length=MAX_LENGHT,
     )
-
+    first_name = models.CharField(
+        max_length=MAX_LENGHT,
+        verbose_name='Имя')
+    last_name = models.CharField(
+        max_length=MAX_LENGHT,
+        verbose_name='Фамилия')
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = (
         'username',
@@ -65,7 +70,10 @@ class Subscribe(models.Model):
                 name='unique_subscription'
             ),
             models.CheckConstraint(
-                check=models.Q(_negated=True, author=models.F('user')),
+                check=models.Q(
+                    _negated=True,
+                    author=models.F('user')
+                ),
                 name='self_follow',
             ),
         )

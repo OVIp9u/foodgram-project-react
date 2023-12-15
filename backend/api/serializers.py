@@ -3,7 +3,7 @@ from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import exceptions, fields, serializers, status
 from rest_framework.response import Response
-
+from rest_framework.validators import UniqueTogetherValidator
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 from users.models import Subscribe, User
@@ -41,21 +41,6 @@ class SubscribeSerializer(CustomUserSerializer):
         )
         read_only_fields = ('email', 'username')
 
-    def validate(self, data):
-        author = self.instance
-        user = self.context.get('request').user
-        if Subscribe.objects.filter(author=author, user=user).exists():
-            raise exceptions.ValidationError(
-                detail='Вы уже подписаны на этого пользователя!',
-                code=status.HTTP_400_BAD_REQUEST
-            )
-        if user == author:
-            raise exceptions.ValidationError(
-                detail='Вы не можете подписаться на себя!',
-                code=status.HTTP_400_BAD_REQUEST
-            )
-        return data
-
     def get_recipes_count(self, obj):
         return obj.recipes.count()
 
@@ -68,6 +53,32 @@ class SubscribeSerializer(CustomUserSerializer):
         serializer = RecipeMinSerializer(recipes, many=True, read_only=True)
         return serializer.data
 
+class SubscribeUpdateSerializer(serializers.ModelSerializer):
+    """Сериализатор создания/удаления подписки."""
+
+    class Meta:
+        model = Subscribe
+        fields = ('author', 'user')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Subscribe.objects.all(),
+                fields=('author', 'user'),
+                message='Вы уже подписаны на этого автора.'
+            )
+        ]
+
+    def validate(self, data):
+        if data['user'] == data['author']:
+            raise serializers.ValidationError(
+                {'error': 'Нельзя подписаться на себя.'}
+            )
+        return super().validate(data)
+
+    def to_representation(self, instance):
+        """Вывод данных сериализатором рецепта."""
+        return SubscribeSerializer(
+            instance.author, context=self.context
+        ).data
 
 class TagSerializer(serializers.ModelSerializer):
     """Сериализатор тега"""
@@ -279,8 +290,6 @@ class RecipeMinSerializer(serializers.ModelSerializer):
             'image',
             'cooking_time'
         )
-
-
 
 
 class AbstractSerializer(serializers.ModelSerializer):
