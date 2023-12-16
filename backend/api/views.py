@@ -30,13 +30,6 @@ class CustomUserViewSet(views.UserViewSet):
             return [permissions.IsAuthenticated()]
         return super().get_permissions()
 
-    def perform_create(self, serializer, *args, **kwargs):
-        serializer.is_valid()
-        user = serializer.save(*args, **kwargs)
-        signals.user_registered.send(
-            sender=self.__class__, user=user, request=self.request
-        )
-
     @action(
         detail=False,
         permission_classes=[permissions.IsAuthenticated]
@@ -69,7 +62,7 @@ class CustomUserViewSet(views.UserViewSet):
 
         serializer = SubscribeUpdateSerializer(
             data=data,
-            context={"request": request}
+            context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
