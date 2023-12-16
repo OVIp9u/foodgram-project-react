@@ -1,7 +1,8 @@
 import csv
 
-from api.constants import PATH
 from django.core.management.base import BaseCommand
+
+from api.constants import PATH
 from recipes.models import Ingredient
 
 
