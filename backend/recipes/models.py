@@ -1,9 +1,8 @@
+from api.constants import MAX_LENGHT, VALID_MAX, VALID_MIN
 from colorfield import fields
 from django.contrib.auth import get_user_model
 from django.core import validators
 from django.db import models
-
-from api.constants import MAX_LENGHT, VALID_MAX, VALID_MIN
 
 User = get_user_model()
 
