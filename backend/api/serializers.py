@@ -1,11 +1,10 @@
 from django.db import models
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework import exceptions, fields, serializers
-from rest_framework.validators import UniqueTogetherValidator
-
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
+from rest_framework import exceptions, fields, serializers
+from rest_framework.validators import UniqueTogetherValidator
 from users.models import Subscribe, User
 
 
