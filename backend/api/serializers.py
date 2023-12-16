@@ -1,11 +1,14 @@
 from django.db import models
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
-                            ShoppingCart, Tag)
 from rest_framework import exceptions, fields, serializers
 from rest_framework.validators import UniqueTogetherValidator
+
+from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Tag)
 from users.models import Subscribe, User
+
+from .constants import VALID_MAX, VALID_MIN
 
 
 class CustomUserSerializer(UserSerializer):
@@ -135,23 +138,23 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         request = self.context.get('request')
-        if request is not None:
-            return (
-                request.user.is_authenticated
-                and Favorite.objects.filter(
-                    user=request.user, recipe=obj
-                ).exists()
-            )
+        return (
+            request is not None
+            and request.user.is_authenticated
+            and Favorite.objects.filter(
+                user=request.user, recipe=obj
+            ).exists()
+        )
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
-        if request is not None:
-            return (
-                request.user.is_authenticated
-                and ShoppingCart.objects.filter(
-                    user=request.user, recipe=obj
-                ).exists()
-            )
+        return (
+            request is not None
+            and request.user.is_authenticated
+            and ShoppingCart.objects.filter(
+                user=request.user, recipe=obj
+            ).exists()
+        )
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
@@ -188,18 +191,18 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_cooking_time(self, value):
-        if value > 32767:
+        if value > VALID_MAX:
             raise exceptions.ValidationError(
                 {'cooking_time': 'Время приготовления больше 32767!'}
             )
-        if value < 1:
+        if value < VALID_MIN:
             raise exceptions.ValidationError(
                 {'cooking_time': 'Время приготовления не может быть меньше 1!'}
             )
         return value
 
     def validate_tags(self, value):
-        if len(value) < 1 or not value:
+        if len(value) < VALID_MIN or not value:
             raise exceptions.ValidationError(
                 {'tags': 'Нужно выбрать хотя бы один тег!'}
             )
@@ -223,7 +226,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 current_ingredient = Ingredient.objects.get(
                     id=ingredient['id']
                 )
-            except Exception:
+            except Ingredient.DoesNotExist:
                 raise exceptions.ValidationError({
                     'ingredients': 'Такого ингредиента нет в базе!'
                 })
@@ -231,7 +234,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 raise exceptions.ValidationError({
                     'ingredients': 'Ингридиенты не могут повторяться!'
                 })
-            if int(ingredient['amount']) < 1:
+            if int(ingredient['amount']) < VALID_MIN:
                 raise exceptions.ValidationError({
                     'amount': 'Количество ингредиента не может быть меньше 1!'
                 })

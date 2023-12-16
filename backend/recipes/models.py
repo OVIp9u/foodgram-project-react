@@ -1,8 +1,9 @@
-from api.constants import MAX_LENGHT
 from colorfield import fields
 from django.contrib.auth import get_user_model
 from django.core import validators
 from django.db import models
+
+from api.constants import MAX_LENGHT, VALID_MAX, VALID_MIN
 
 User = get_user_model()
 
@@ -93,10 +94,10 @@ class Recipe(models.Model):
         verbose_name='Время приготовления',
         validators=[
             validators.MinValueValidator(
-                1, message='Минимальное значение 1!'
+                VALID_MIN, message='Минимальное значение 1!'
             ),
             validators.MaxValueValidator(
-                32767, message='Максимальное значение 32767!'
+                VALID_MAX, message='Максимальное значение 32767!'
             )
         ]
     )
@@ -166,16 +167,6 @@ class AbstractRecipeModel(models.Model):
 
 class Favorite(AbstractRecipeModel):
     """Модель избранного."""
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Пользователь',
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        verbose_name='Рецепт',
-    )
 
     class Meta:
         default_related_name = 'favorites'
@@ -191,16 +182,6 @@ class Favorite(AbstractRecipeModel):
 
 class ShoppingCart(AbstractRecipeModel):
     """Модель корзины."""
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Пользователь',
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        verbose_name='Рецепт',
-        on_delete=models.CASCADE,
-    )
 
     class Meta:
         default_related_name = 'shopping_cart'

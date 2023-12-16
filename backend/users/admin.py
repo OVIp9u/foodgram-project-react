@@ -20,15 +20,11 @@ class UserAdmin(admin.ModelAdmin):
     )
     empty_value_display = '-пусто-'
 
-    @admin.display(
-        description='Количество рецептов'
-    )
+    @admin.display(description='Количество рецептов')
     def recipes(self, obj):
         return obj.recipes.count()
 
-    @admin.display(
-        description='Количество подписчиков'
-    )
+    @admin.display(description='Количество подписчиков')
     def subscribers(self, obj):
         return obj.subscriber.count()
 

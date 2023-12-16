@@ -31,6 +31,7 @@ class InlineRecipeIngredient(admin.StackedInline):
     """Вывод ингредиентов на страницу рецепта."""
     model = RecipeIngredient
     extra = 0
+    min_num = 1
 
 
 @admin.register(Recipe)

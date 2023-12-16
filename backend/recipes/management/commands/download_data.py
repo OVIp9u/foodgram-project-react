@@ -1,8 +1,12 @@
 import csv
+from pathlib import Path
 
-from api.constants import PATH
 from django.core.management.base import BaseCommand
+
+from foodgram.settings import BASE_DIR
 from recipes.models import Ingredient
+
+PATH = Path(BASE_DIR, 'data', 'ingredients.csv')
 
 
 def clear_data(self):
@@ -28,9 +32,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """Загрузка Ингредиентов."""
 
-        if options["delete_existing"]:
+        if options['delete_existing']:
             clear_data(self)
-            return None
         with open(
             PATH, encoding='utf-8', newline=''
         ) as csvfile:
