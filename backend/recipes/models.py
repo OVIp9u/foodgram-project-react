@@ -94,10 +94,10 @@ class Recipe(models.Model):
         verbose_name='Время приготовления',
         validators=[
             validators.MinValueValidator(
-                VALID_MIN, message='Минимальное значение 1!'
+                VALID_MIN, message=f'Минимальное значение {VALID_MIN}!'
             ),
             validators.MaxValueValidator(
-                VALID_MAX, message='Максимальное значение 32767!'
+                VALID_MAX, message=f'Максимальное значение {VALID_MAX}!'
             )
         ]
     )
@@ -127,10 +127,10 @@ class RecipeIngredient(models.Model):
         verbose_name='Количество ингредиентов',
         validators=[
             validators.MinValueValidator(
-                1, message='Минимальное значение 1!'
+                VALID_MIN, message=f'Минимальное значение {VALID_MIN}'
             ),
             validators.MaxValueValidator(
-                32767, message='Максимальное значение 32767!'
+                VALID_MAX, message=f'Максимальное значение {VALID_MAX}!'
             )
         ]
     )

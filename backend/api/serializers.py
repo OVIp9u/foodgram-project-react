@@ -7,7 +7,6 @@ from rest_framework.validators import UniqueTogetherValidator
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 from users.models import Subscribe, User
-
 from .constants import VALID_MAX, VALID_MIN
 
 
@@ -193,12 +192,13 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def validate_cooking_time(self, value):
         if value > VALID_MAX:
             raise exceptions.ValidationError(
-                {'cooking_time': 'Время приготовления больше 32767!'}
+                {'cooking_time': f'Время приготовления больше {VALID_MAX}!'}
             )
         if value < VALID_MIN:
-            raise exceptions.ValidationError(
-                {'cooking_time': 'Время приготовления не может быть меньше 1!'}
-            )
+            raise exceptions.ValidationError({
+                'cooking_time':
+                f'Время приготовления не может быть меньше {VALID_MIN}!'
+            })
         return value
 
     def validate_tags(self, value):
@@ -236,7 +236,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 })
             if int(ingredient['amount']) < VALID_MIN:
                 raise exceptions.ValidationError({
-                    'amount': 'Количество ингредиента не может быть меньше 1!'
+                    'amount':
+                    f'Количество ингредиента не может быть меньше {VALID_MIN}!'
                 })
             ingredients_list.append(current_ingredient)
         return ingredients
