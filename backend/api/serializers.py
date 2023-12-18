@@ -325,9 +325,6 @@ class FavoriteRecipeSerializer(AbstractSerializer):
         model = Favorite
         fields = ('user', 'recipe')
 
-    def validate(self, data):
-        return super().validate(data)
-
 
 class ShoppingCartSerializer(AbstractSerializer):
     """Сериализатор добавления в корзину."""
