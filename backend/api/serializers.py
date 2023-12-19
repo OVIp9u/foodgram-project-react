@@ -172,13 +172,38 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate(self, attrs):
-        if 'tags' not in attrs.keys():
-            raise exceptions.ValidationError(
-                {'tags': 'Отсутствует поле "Теги"!'},
-            )
         if 'ingredients' not in attrs.keys():
             raise exceptions.ValidationError(
                 {'tags': 'Отсутствует поле "Ингредиенты"!'},
+            )
+        ingredients = attrs['ingredients']
+        if not ingredients:
+            raise exceptions.ValidationError({
+                'ingredients': 'Нужен хотя бы один ингредиент!'
+            })
+        ingredients_list = []
+        for ingredient in ingredients:
+            try:
+                current_ingredient = Ingredient.objects.get(
+                    id=ingredient['id']
+                )
+            except Ingredient.DoesNotExist:
+                raise exceptions.ValidationError({
+                    'ingredients': 'Такого ингредиента нет в базе!'
+                })
+            if current_ingredient in ingredients_list:
+                raise exceptions.ValidationError({
+                    'ingredients': 'Ингридиенты не могут повторяться!'
+                })
+            if int(ingredient['amount']) < VALID_MIN:
+                raise exceptions.ValidationError({
+                    'amount':
+                    f'Количество ингредиента не может быть меньше {VALID_MIN}!'
+                })
+            ingredients_list.append(current_ingredient)
+        if 'tags' not in attrs.keys():
+            raise exceptions.ValidationError(
+                {'tags': 'Отсутствует поле "Теги"!'},
             )
         return super().validate(attrs)
 
@@ -215,7 +240,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             tags_list.append(tag)
         return value
 
-    def validate_ingredients(self, ingredients):
+    '''def validate_ingredients(self, ingredients):
         if not ingredients:
             raise exceptions.ValidationError({
                 'ingredients': 'Нужен хотя бы один ингредиент!'
@@ -240,7 +265,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                     f'Количество ингредиента не может быть меньше {VALID_MIN}!'
                 })
             ingredients_list.append(current_ingredient)
-        return ingredients
+        return ingredients'''
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
